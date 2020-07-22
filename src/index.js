@@ -25,10 +25,13 @@ io.on('connection',(socket) => {
         socket.join(user.room)
         // This emits an event to only connected client
         socket.emit('message',generateMessage('Admin','Welcome!'))
-
         // This emits an event to all connected clients except the Parent client
         // To specify the room we used .to() method
         socket.broadcast.to(user.room).emit('message',generateMessage('Admin',`${user.username} has joined!`));
+        io.to(user.room).emit('roomData',{
+            room: user.room,
+            users : getUserInRoom(user.room)
+        })
         callback();
     })
     // This emits an event to all connected clients (io.emit => Listener)
@@ -51,8 +54,13 @@ io.on('connection',(socket) => {
     // Built-in event triggers when a connected client left
     socket.on('disconnect',() => {
         const user = removeUser(socket.id)
-        if(user)
+        if(user){
             io.to(user.room).emit('message',generateMessage('Admin',`${user.username} has left!`))
+            io.to(user.room).emit('roomData',{
+                room: user.room,
+                users : getUserInRoom(user.room)
+            })
+        }
     })
 })
 server.listen(port,() => {
